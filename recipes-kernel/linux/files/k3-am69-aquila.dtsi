@@ -2125,3 +2125,14 @@
 	pinctrl-0 = <&pinctrl_wkup_uart0>;
 	status = "disabled";
 };
+
+/*
+ * ti-linux-6.12 k3-j784s4-main.dtsi defines acspcie0_proxy_ctrl but omits
+ * acspcie1_proxy_ctrl, which is referenced by pcie0_rc below.
+ */
+&scm_conf {
+	acspcie1_proxy_ctrl: acspcie1-ctrl@1a094 {
+		compatible = "ti,j784s4-acspcie-proxy-ctrl", "syscon";
+		reg = <0x1a094 0x4>;
+	};
+};
