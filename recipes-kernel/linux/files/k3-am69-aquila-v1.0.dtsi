@@ -1,0 +1,278 @@
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+/*
+ * Copyright (C) 2025 Toradex
+ *
+ * Common dtsi for Toradex Aquila AM69 SoM V1.0
+ *
+ * This file restores support for Aquila AM69 V1.0 SoMs after adjusting
+ * the base device-tree (k3-am69-aquila.dtsi) to support Aquila AM69 V1.1.
+ * It re-enables pinmux and serdes settings for V1.0 affected interfaces
+ * like ETH_2, PWM_2, UART_1, and GPIOs, while disabling V1.1-only
+ * interfaces to avoid conflicts.
+ */
+
+&{/} {
+	aliases {
+		ethernet1 = &main_cpsw0_port2;
+		mdio-gpio0 = &eth2_mdio_gpio;
+		serial0 = &main_uart1;
+	};
+
+	reg_3v3_dp: regulator-3v3-dp {
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_gpio21_dp>;
+		/* Aquila GPIO_21_DP (AQUILA B57) */
+		gpio = <&main_gpio0 37 GPIO_ACTIVE_HIGH>;
+	};
+
+	/* Enabled by EN_3V3_VIO (PMIC_GPIO_9) */
+	reg_3v3_vio: regulator-3v3-vio {
+		compatible = "regulator-fixed";
+		regulator-max-microvolt = <3300000>;
+		regulator-min-microvolt = <3300000>;
+		regulator-name = "+V3.3_VIO";
+		vin-supply = <&reg_vin>;
+	};
+
+	/* Enabled by +V1.8_MCU_IO */
+	reg_2v5_eth: regulator-2v5-eth {
+		compatible = "regulator-fixed";
+		regulator-max-microvolt = <2500000>;
+		regulator-min-microvolt = <2500000>;
+		regulator-name = "+V2.5_VIO";
+		vin-supply = <&reg_3v3_vio>;
+	};
+
+	/* Aquila ETH_2_XGMII_MDIO (GPIO bit-banging) */
+	eth2_mdio_gpio: mdio {
+		compatible = "virtual,mdio-gpio";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_eth2_mdc>, <&pinctrl_eth2_mdio>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		gpios = <&main_gpio0 48 GPIO_ACTIVE_HIGH>, /* MDC */
+			<&main_gpio0 47 GPIO_ACTIVE_HIGH>; /* MDIO */
+		status = "okay";
+
+		cpsw0_port2_phy4: ethernet-phy@4 {
+			reg = <4>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_eth2_int>;
+			interrupt-parent = <&main_gpio0>;
+			interrupts = <44 IRQ_TYPE_EDGE_FALLING>;
+		};
+	};
+};
+
+/* Aquila ETH_2 SGMII PHY (V1.1)*/
+&main_cpsw0_port8 {
+	status = "disabled";
+};
+
+/* Aquila ETH_2 SGMII PHY */
+&main_cpsw0_port2 {
+	phy-mode = "sgmii";
+	phys = <&cpsw0_phy_gmii_sel 2>, <&serdes1_sgmii_link>;
+	phy-names = "mac", "serdes";
+	phy-handle = <&cpsw0_port2_phy4>;
+	status = "okay";
+};
+
+/* Aquila ETH_2_XGMII_MDIO (V1.1) */
+&main_cpsw0_mdio {
+	status = "disabled";
+};
+
+/* Aquila PWM_2 (V1.1) */
+&main_ehrpwm1 {
+	status = "disabled";
+};
+
+/* Aquila PWM_2 */
+&main_ehrpwm3 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_main_ehrpwm3_a>;
+	status = "okay";
+};
+
+&main_gpio0 {
+	gpio-line-names =
+		"", /* 0 */
+		"AQUILA_B17",
+		"AQUILA_B18",
+		"AQUILA_B53",
+		"AQUILA_B54",
+		"AQUILA_B59",
+		"AQUILA_C18",
+		"AQUILA_C19",
+		"AQUILA_A13",
+		"AQUILA_A12",
+		"AQUILA_B75", /* 10 */
+		"AQUILA_B77",
+		"AQUILA_B42",
+		"AQUILA_B44",
+		"AQUILA_D19",
+		"AQUILA_D20",
+		"AQUILA_B58",
+		"AQUILA_D24",
+		"AQUILA_B45",
+		"AQUILA_C06",
+		"AQUILA_C05", /* 20 */
+		"AQUILA_B35",
+		"AQUILA_B37",
+		"AQUILA_B36",
+		"AQUILA_B38",
+		"AQUILA_C25",
+		"AQUILA_B22",
+		"AQUILA_B21",
+		"AQUILA_B74",
+		"AQUILA_D25",
+		"AQUILA_B24", /* 30 */
+		"AQUILA_B43",
+		"AQUILA_C38",
+		"AQUILA_B46",
+		"AQUILA_D23",
+		"AQUILA_C26",
+		"AQUILA_A11",
+		"AQUILA_B57",
+		"AQUILA_B19",
+		"AQUILA_D09",
+		"AQUILA_D12", /* 40 */
+		"AQUILA_C35",
+		"AQUILA_D10",
+		"AQUILA_D11",
+		"AQUILA_B81",
+		"AQUILA_B48",
+		"AQUILA_B49",
+		"AQUILA_B89",
+		"AQUILA_B90",
+		"AQUILA_B23",
+		"AQUILA_B20", /* 50 */
+		"AQUILA_D16",
+		"AQUILA_A06",
+		"AQUILA_D14",
+		"AQUILA_D15",
+		"AQUILA_D17",
+		"AQUILA_B41",
+		"AQUILA_B40",
+		"AQUILA_A01",
+		"",
+		"AQUILA_A08", /* 60 */
+		"AQUILA_A10",
+		"AQUILA_A02",
+		"AQUILA_A03",
+		"AQUILA_A05",
+		"AQUILA_A07";
+
+	status = "okay";
+};
+
+&main_pmx0 {
+	/* Aquila PWM_2 */
+	pinctrl_main_ehrpwm3_a: main-ehrpwm3a-default-pins {
+		pinctrl-single,pins = <
+			J784S4_IOPAD(0x08c, PIN_OUTPUT, 9) /* (AE35) MCASP0_AXR7.EHRPWM3_A */ /* AQUILA C26 */
+		>;
+	};
+
+	/* Aquila GPIO_11_CSI_1 */
+	pinctrl_gpio11_csi_1: main-gpio0-36-default-pins {
+		pinctrl-single,pins = <
+			J784S4_IOPAD(0x090, PIN_INPUT, 7) /* (AC35) MCASP0_AXR8.GPIO0_36 */ /* AQUILA A11 */
+		>;
+	};
+
+	/* Aquila GPIO_21_DP */
+	pinctrl_gpio21_dp: main-gpio0-37-default-pins {
+		pinctrl-single,pins = <
+			J784S4_IOPAD(0x094, PIN_INPUT, 7) /* (AG35) MCASP0_AXR9.GPIO0_37 */ /* AQUILA B57 */
+		>;
+	};
+
+	/* Aquila GPIO_12_CSI_1 */
+	pinctrl_gpio12_csi_1: main-gpio0-38-default-pins {
+		pinctrl-single,pins = <
+			J784S4_IOPAD(0x098, PIN_INPUT, 7) /* (AH36) MCASP0_AXR10.GPIO0_38 */ /* AQUILA B19 */
+		>;
+	};
+
+
+	/* Aquila ETH_2_XGMII_MDIO as GPIO */
+	pinctrl_eth2_mdio: main-gpio0-47-default-pins {
+		pinctrl-single,pins = <
+			J784S4_IOPAD(0x0bc, PIN_INPUT, 7)  /* (AD33) MCASP1_AFSX.GPIO0_47 */ /* AQUILA B89 */
+		>;
+	};
+
+	/* Aquila ETH_2_XGMII_MDC as GPIO */
+	pinctrl_eth2_mdc: main-gpio0-48-default-pins {
+		pinctrl-single,pins = <
+			J784S4_IOPAD(0x0c0, PIN_INPUT, 7) /* (AD38) MCASP1_AXR0.GPIO0_48 */ /* AQUILA B90 */
+		>;
+	};
+
+	/* Aquila UART_1 */
+	pinctrl_main_uart1: main-uart1-default-pins {
+		pinctrl-single,pins = <
+			J784S4_IOPAD(0x05c, PIN_INPUT, 11)  /* (AC36) MCASP2_AXR0.UART1_CTSn */ /* AQUILA B36 */
+			J784S4_IOPAD(0x060, PIN_OUTPUT, 11) /* (AE36) MCASP2_AXR1.UART1_RTSn */ /* AQUILA B38 */
+			J784S4_IOPAD(0x054, PIN_INPUT, 11)  /* (AD37) MCASP2_ACLKX.UART1_RXD */ /* AQUILA B35 */
+			J784S4_IOPAD(0x058, PIN_OUTPUT, 11) /* (AE37) MCASP2_AFSX.UART1_TXD  */ /* AQUILA B37 */
+		>;
+	};
+};
+
+/* Aquila UART_1 */
+&main_uart1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_main_uart1>;
+	status = "okay";
+};
+
+/* Aquila UART_1 (V1.1) */
+&main_uart4 {
+	status = "disabled";
+};
+
+&pmic_tps6594 {
+	regulators {
+		/delete-node/buck5;
+		buck5 {
+			regulator-always-on;
+			regulator-boot-on;
+			regulator-max-microvolt = <850000>;
+			regulator-min-microvolt = <850000>;
+			regulator-name = "+V0.85_VDD_MCU (PMIC BUCK5)";
+		};
+
+		/delete-node/ldo2;
+		ldo2 {
+			regulator-always-on;
+			regulator-boot-on;
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+			regulator-name = "+V1.8_MCU_IO (PMIC LDO2)";
+		};
+	};
+};
+
+&serdes1 {
+	status = "okay";
+
+	/* Aquila ETH_2 xGMII */
+	serdes1_sgmii_link: phy@3 {
+		reg = <3>;
+		#phy-cells = <0>;
+		resets = <&serdes_wiz1 4>;
+		cdns,num-lanes = <1>;
+		cdns,phy-type = <PHY_TYPE_SGMII>;
+	};
+};
+
+&serdes2 {
+	status = "disabled";
+};
+
+&serdes_wiz2 {
+	status = "disabled";
+};
