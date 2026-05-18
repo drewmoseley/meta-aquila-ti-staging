@@ -1,0 +1,56 @@
+From e9ea3350e62c87e73faddd0a83e809d133d3f92c Mon Sep 17 00:00:00 2001
+From: Drew Moseley <drew@moseleynet.net>
+Date: Mon, 18 May 2026 16:00:17 -0400
+Subject: [PATCH 2/4] board: toradex: aquila-am69: call k3_mem_map_init() in
+ dram_init()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+TI boards get dram_init() from board/ti/common/k3-ddr.c which calls
+k3_mem_map_init() to populate k3_mem_map[] with cacheable DRAM entries
+before enable_caches() builds the ARM64 page tables.  That common file
+is linked via libs-$(HAVE_VENDOR_COMMON_LIB) += board/$(VENDOR)/common/
+which resolves to board/ti/common/ — it does not apply to VENDOR=toradex.
+
+Without k3_mem_map_init(), setup_pgtables() builds a page table with no
+DRAM entry, enabling the MMU causes translation faults for code running
+above 0x80000000, and the board hangs silently inside enable_caches().
+
+Signed-off-by: Drew Moseley <drew.moseley@toradex.com>
+---
+ board/toradex/aquila-am69/aquila-am69.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/board/toradex/aquila-am69/aquila-am69.c b/board/toradex/aquila-am69/aquila-am69.c
+index 1cf960adec6..85eb9192c23 100644
+--- a/board/toradex/aquila-am69/aquila-am69.c
++++ b/board/toradex/aquila-am69/aquila-am69.c
+@@ -14,6 +14,8 @@
+ #include <i2c.h>
+ #include <spl.h>
+ 
++#include <mach/k3-ddr.h>
++
+ #include "aquila_ddrs.h"
+ #include "ddrs_patch.h"
+ 
+@@ -157,8 +159,14 @@ int dram_init(void)
+ 	int ret;
+ 
+ 	ret = fdtdec_setup_mem_size_base_lowest();
+-	if (ret)
++	if (ret) {
+ 		printf("Error setting up mem size and base. %d\n", ret);
++		return ret;
++	}
++
++	ret = k3_mem_map_init();
++	if (ret)
++		printf("Error setting up MMU table. %d\n", ret);
+ 
+ 	return ret;
+ }
+-- 
+2.54.0
+

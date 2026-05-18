@@ -1,0 +1,107 @@
+From f4b1ea127ce2bae499f3ae98ce4bb2272581e0b8 Mon Sep 17 00:00:00 2001
+From: Drew Moseley <drew@moseleynet.net>
+Date: Mon, 18 May 2026 16:00:42 -0400
+Subject: [PATCH 3/4] arm: aquila-am69: add Toradex BSP defconfig options and
+ board env
+
+Add Toradex-BSP-specific defconfig options:
+- DISTRO_DEFAULTS + BOOTCOMMAND="bootflow scan -b"
+- PREBOOT to construct fdtfile from variant/fdt_board env vars
+- ENV_VARS_UBOOT_RUNTIME_CONFIG for board detection
+- BOOTCOUNT_LIMIT/ENV for watchdog-assisted boot fallback
+- USB gadget / fastboot / UUU support
+
+Add board/toradex/aquila-am69/aquila-am69.env with compiled-in
+environment defaults (boot_targets, console, memory addresses,
+DFU alt info, eMMC raw-write helpers for tiboot3/tispl/u-boot).
+
+Signed-off-by: Drew Moseley <drew.moseley@toradex.com>
+---
+ board/toradex/aquila-am69/aquila-am69.env | 47 +++++++++++++++++++++++
+ configs/aquila-am69_a72_defconfig         | 19 +++++++++
+ 2 files changed, 66 insertions(+)
+ create mode 100644 board/toradex/aquila-am69/aquila-am69.env
+
+diff --git a/board/toradex/aquila-am69/aquila-am69.env b/board/toradex/aquila-am69/aquila-am69.env
+new file mode 100644
+index 00000000000..34f2e63f706
+--- /dev/null
++++ b/board/toradex/aquila-am69/aquila-am69.env
+@@ -0,0 +1,47 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++/*
++ * Default environment for Toradex Aquila AM69 SoM
++ *
++ * Copyright 2024 Toradex - https://www.toradex.com/
++ */
++
++#include <env/ti/k3_rproc.env>
++
++boot_script_dhcp=boot.scr
++boot_targets=mmc1 mmc0 dhcp
++console=ttyS2
++fdt_addr_r=0x90200000
++fdt_board=dev
++kernel_addr_r=0x82000000
++kernel_comp_addr_r=0x80200000
++kernel_comp_size=0x08000000
++ramdisk_addr_r=0x90300000
++scriptaddr=0x90280000
++
++dfu_alt_info_ram=
++	tispl.bin ram 0x80080000 0x200000;
++	u-boot.img ram 0x81000000 0x400000;
++	loadaddr ram 0x82000000 0x80000;
++	scriptaddr ram 0x90280000 0x80000;
++	ramdisk_addr_r ram 0x90300000 0x8000000
++
++update_tiboot3=
++	askenv confirm Did you load tiboot3-am69-hs-fs-aquila.bin (y/N)?;
++	if test $confirm = y; then
++		setexpr blkcnt ${filesize} + 0x1ff && setexpr blkcnt ${blkcnt} / 0x200;
++		mmc dev 0 1; mmc write ${loadaddr} 0x0 ${blkcnt};
++	fi
++
++update_tispl=
++	askenv confirm Did you load tispl.bin (y/N)?;
++	if test $confirm = y; then
++		setexpr blkcnt ${filesize} + 0x1ff && setexpr blkcnt ${blkcnt} / 0x200;
++		mmc dev 0 1; mmc write ${loadaddr} 0x400 ${blkcnt};
++	fi
++
++update_uboot=
++	askenv confirm Did you load u-boot.img (y/N)?;
++	if test $confirm = y; then
++		setexpr blkcnt ${filesize} + 0x1ff && setexpr blkcnt ${blkcnt} / 0x200;
++		mmc dev 0 1; mmc write ${loadaddr} 0x1400 ${blkcnt};
++	fi
+diff --git a/configs/aquila-am69_a72_defconfig b/configs/aquila-am69_a72_defconfig
+index f66495fd1d5..3c90449a723 100644
+--- a/configs/aquila-am69_a72_defconfig
++++ b/configs/aquila-am69_a72_defconfig
+@@ -22,3 +22,22 @@ CONFIG_ENV_SIZE=0x2000
+ CONFIG_ENV_OFFSET=0xFFFFDE00
+ CONFIG_SYS_PROMPT="Aquila AM69 # "
+ CONFIG_BOOTDELAY=1
++CONFIG_DISTRO_DEFAULTS=y
++CONFIG_BOOTCOMMAND="bootflow scan -b"
++CONFIG_USE_PREBOOT=y
++CONFIG_PREBOOT="test -n ${fdtfile} || setenv fdtfile k3-am69-aquila${variant}-${fdt_board}.dtb"
++CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG=y
++CONFIG_CMD_BOOTCOUNT=y
++CONFIG_BOOTCOUNT_LIMIT=y
++CONFIG_BOOTCOUNT_ENV=y
++CONFIG_USB_GADGET_MANUFACTURER="Toradex"
++CONFIG_USB_GADGET_VENDOR_NUM=0x1b67
++CONFIG_USB_GADGET_PRODUCT_NUM=0x4000
++CONFIG_USB_GADGET_OS_DESCRIPTORS=y
++CONFIG_USB_FUNCTION_FASTBOOT=y
++CONFIG_FASTBOOT_BUF_ADDR=0xC0000000
++CONFIG_FASTBOOT_BUF_SIZE=0x2F000000
++CONFIG_FASTBOOT_FLASH=y
++CONFIG_FASTBOOT_UUU_SUPPORT=y
++CONFIG_FASTBOOT_FLASH_MMC_DEV=0
++CONFIG_FASTBOOT_CMD_OEM_FORMAT=y
+-- 
+2.54.0
+
