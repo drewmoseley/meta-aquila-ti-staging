@@ -1,0 +1,114 @@
+From f0b0b30c8daa19e63978baaf96a27d404944c00e Mon Sep 17 00:00:00 2001
+From: Drew Moseley <drew@moseleynet.net>
+Date: Mon, 18 May 2026 16:53:01 -0400
+Subject: [PATCH 5/5] board: toradex: aquila-am69: add Toradex config block
+ support
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Enable TDX_CFG_BLOCK so U-Boot reads the factory-programmed config
+block from eMMC (dev=0, hw-part=1, offset=-512) and populates:
+  - serial#  env var  → /proc/device-tree/serial-number in Linux
+  - ethaddr / eth1addr from the OUI embedded in the serial number
+  - toradex,product-id and toradex,board-rev in the passed DT
+
+Configuration (eMMC raw sector storage):
+  TDX_HAVE_MMC=y, TDX_CFG_BLOCK_DEV=0, TDX_CFG_BLOCK_PART=1,
+  TDX_CFG_BLOCK_OFFSET=-512 (last sector of eMMC boot partition 1)
+  TDX_CFG_BLOCK_EXTRA=y for carrier board EEPROM support
+
+Add ft_common_board_setup() call in ft_board_setup() so the
+serial-number DT property is written before Linux boots — this
+is what the sethostname init script reads to form the hostname.
+
+Add missing Aquila AM69 product entries to tdx-cfg-block.c module
+table (TI 2025.01 base only has prodid 88 / 32GB WB IT):
+  [211] 32GB IT, [212] 16GB WB IT, [213] 16GB IT,
+  [214] 8GB WB IT, [215] 8GB IT, [223] TDA4 16GB IT
+
+Signed-off-by: Drew Moseley <drew.moseley@toradex.com>
+---
+ board/toradex/aquila-am69/Kconfig       | 26 +++++++++++++++++++++++++
+ board/toradex/aquila-am69/aquila-am69.c |  3 ++-
+ board/toradex/common/tdx-cfg-block.c    |  6 ++++++
+ 3 files changed, 34 insertions(+), 1 deletion(-)
+
+diff --git a/board/toradex/aquila-am69/Kconfig b/board/toradex/aquila-am69/Kconfig
+index 5afc9ca5c81..1ec8ddff9b9 100644
+--- a/board/toradex/aquila-am69/Kconfig
++++ b/board/toradex/aquila-am69/Kconfig
+@@ -14,6 +14,32 @@ config SYS_VENDOR
+ config SYS_CONFIG_NAME
+ 	default "aquila-am69"
+ 
++config TDX_CFG_BLOCK
++	default y
++
++config TDX_CFG_BLOCK_2ND_ETHADDR
++	default y
++
++config TDX_CFG_BLOCK_DEV
++	default "0"
++
++config TDX_CFG_BLOCK_EXTRA
++	default y
++
++config TDX_CFG_BLOCK_OFFSET
++	default "-512"
++
++config TDX_CFG_BLOCK_PART
++	default "1"
++
++config TDX_HAVE_EEPROM_EXTRA
++	default y
++
++config TDX_HAVE_MMC
++	default y
++
++source "board/toradex/common/Kconfig"
++
+ endif
+ 
+ if TARGET_AQUILA_AM69_R5
+diff --git a/board/toradex/aquila-am69/aquila-am69.c b/board/toradex/aquila-am69/aquila-am69.c
+index 85eb9192c23..a52596385ce 100644
+--- a/board/toradex/aquila-am69/aquila-am69.c
++++ b/board/toradex/aquila-am69/aquila-am69.c
+@@ -16,6 +16,7 @@
+ 
+ #include <mach/k3-ddr.h>
+ 
++#include "../common/tdx-common.h"
+ #include "aquila_ddrs.h"
+ #include "ddrs_patch.h"
+ 
+@@ -232,7 +233,7 @@ phys_size_t board_get_usable_ram_top(phys_size_t total_size)
+ int ft_board_setup(void *blob, struct bd_info *bd)
+ {
+ 	/* fdt_fixup_msmc_ram_k3 is handled by ft_system_setup in j784s4_fdt.c */
+-	return 0;
++	return ft_common_board_setup(blob, bd);
+ }
+ #endif
+ 
+diff --git a/board/toradex/common/tdx-cfg-block.c b/board/toradex/common/tdx-cfg-block.c
+index a6e3c6afae8..f5386911ab7 100644
+--- a/board/toradex/common/tdx-cfg-block.c
++++ b/board/toradex/common/tdx-cfg-block.c
+@@ -161,6 +161,12 @@ const struct toradex_som toradex_modules[] = {
+ 	[88] = { "Aquila AM69 Octa 32GB WB IT",          TARGET_IS_ENABLED(AQUILA_AM69_A72) },
+ 	[89] = { "Verdin iMX95 Hexa 16GB WB IT",         TARGET_IS_ENABLED(VERDIN_IMX95)    },
+ 	[90] = { "Verdin iMX8M Mini Quad 4GB WB ET",     TARGET_IS_ENABLED(VERDIN_IMX8MM)   },
++	[211] = { "Aquila AM69 Octa 32GB IT",            TARGET_IS_ENABLED(AQUILA_AM69_A72) },
++	[212] = { "Aquila AM69 Octa 16GB WB IT",         TARGET_IS_ENABLED(AQUILA_AM69_A72) },
++	[213] = { "Aquila AM69 Octa 16GB IT",            TARGET_IS_ENABLED(AQUILA_AM69_A72) },
++	[214] = { "Aquila AM69 Octa 8GB WB IT",          TARGET_IS_ENABLED(AQUILA_AM69_A72) },
++	[215] = { "Aquila AM69 Octa 8GB IT",             TARGET_IS_ENABLED(AQUILA_AM69_A72) },
++	[223] = { "Aquila TDA4 Octa 16GB IT",            TARGET_IS_ENABLED(AQUILA_AM69_A72) },
+ };
+ 
+ struct pid4list {
+-- 
+2.54.0
+

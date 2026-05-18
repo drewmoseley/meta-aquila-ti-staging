@@ -1,7 +1,7 @@
 From 5bd25845f791cdacf63e55b49a3f26caa572c5ca Mon Sep 17 00:00:00 2001
 From: Drew Moseley <drew@moseleynet.net>
 Date: Mon, 18 May 2026 15:59:39 -0400
-Subject: [PATCH 1/4] arm: k3: board: dts: Add Toradex Aquila AM69 SoM support
+Subject: [PATCH 1/5] arm: k3: board: dts: Add Toradex Aquila AM69 SoM support
 
 Port Toradex Aquila AM69 (AM69 / J784S4 SoC) board support to the
 TI u-boot-ti 2025.01 tree.

@@ -1,7 +1,7 @@
 From f4b1ea127ce2bae499f3ae98ce4bb2272581e0b8 Mon Sep 17 00:00:00 2001
 From: Drew Moseley <drew@moseleynet.net>
 Date: Mon, 18 May 2026 16:00:42 -0400
-Subject: [PATCH 3/4] arm: aquila-am69: add Toradex BSP defconfig options and
+Subject: [PATCH 3/5] arm: aquila-am69: add Toradex BSP defconfig options and
  board env
 
 Add Toradex-BSP-specific defconfig options:

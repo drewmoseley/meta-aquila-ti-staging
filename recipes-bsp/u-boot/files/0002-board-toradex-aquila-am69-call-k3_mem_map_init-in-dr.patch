@@ -1,7 +1,7 @@
 From e9ea3350e62c87e73faddd0a83e809d133d3f92c Mon Sep 17 00:00:00 2001
 From: Drew Moseley <drew@moseleynet.net>
 Date: Mon, 18 May 2026 16:00:17 -0400
-Subject: [PATCH 2/4] board: toradex: aquila-am69: call k3_mem_map_init() in
+Subject: [PATCH 2/5] board: toradex: aquila-am69: call k3_mem_map_init() in
  dram_init()
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8

@@ -18,6 +18,7 @@ SRC_URI:append:aquila-am69 = " \
     file://0002-board-toradex-aquila-am69-call-k3_mem_map_init-in-dr.patch \
     file://0003-arm-aquila-am69-add-Toradex-BSP-defconfig-options-an.patch \
     file://0004-arm-aquila-am69-add-boot-filesystem-support-to-defco.patch \
+    file://0005-board-toradex-aquila-am69-add-Toradex-config-block-s.patch \
 "
 
 SRC_URI:append:aquila-am69-k3r5 = " \
@@ -25,4 +26,5 @@ SRC_URI:append:aquila-am69-k3r5 = " \
     file://0002-board-toradex-aquila-am69-call-k3_mem_map_init-in-dr.patch \
     file://0003-arm-aquila-am69-add-Toradex-BSP-defconfig-options-an.patch \
     file://0004-arm-aquila-am69-add-boot-filesystem-support-to-defco.patch \
+    file://0005-board-toradex-aquila-am69-add-Toradex-config-block-s.patch \
 "

@@ -1,7 +1,7 @@
 From c72ad8a04629ee74f32e13b2a43eb08e9fe31787 Mon Sep 17 00:00:00 2001
 From: Drew Moseley <drew@moseleynet.net>
 Date: Mon, 18 May 2026 16:01:35 -0400
-Subject: [PATCH 4/4] arm: aquila-am69: add boot filesystem support to
+Subject: [PATCH 4/5] arm: aquila-am69: add boot filesystem support to
  defconfig
 
 j784s4_evm_a72_defconfig does not enable MMC commands or FAT/ext4
