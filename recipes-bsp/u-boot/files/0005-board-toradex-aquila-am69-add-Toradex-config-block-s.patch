@@ -1,8 +1,7 @@
-From f0b0b30c8daa19e63978baaf96a27d404944c00e Mon Sep 17 00:00:00 2001
+From 26a4226f6c143908878457aaa4ff843febc3658c Mon Sep 17 00:00:00 2001
 From: Drew Moseley <drew@moseleynet.net>
 Date: Mon, 18 May 2026 16:53:01 -0400
-Subject: [PATCH 5/5] board: toradex: aquila-am69: add Toradex config block
- support
+Subject: [PATCH] board: toradex: aquila-am69: add Toradex config block support
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -32,7 +31,8 @@ Signed-off-by: Drew Moseley <drew.moseley@toradex.com>
  board/toradex/aquila-am69/Kconfig       | 26 +++++++++++++++++++++++++
  board/toradex/aquila-am69/aquila-am69.c |  3 ++-
  board/toradex/common/tdx-cfg-block.c    |  6 ++++++
- 3 files changed, 34 insertions(+), 1 deletion(-)
+ board/toradex/common/tdx-common.c       | 21 +++++++-------------
+ 4 files changed, 41 insertions(+), 15 deletions(-)
 
 diff --git a/board/toradex/aquila-am69/Kconfig b/board/toradex/aquila-am69/Kconfig
 index 5afc9ca5c81..1ec8ddff9b9 100644
@@ -109,6 +109,38 @@ index a6e3c6afae8..f5386911ab7 100644
  };
  
  struct pid4list {
+diff --git a/board/toradex/common/tdx-common.c b/board/toradex/common/tdx-common.c
+index a6b45cdab81..46734e45877 100644
+--- a/board/toradex/common/tdx-common.c
++++ b/board/toradex/common/tdx-common.c
+@@ -104,20 +104,13 @@ __weak int print_bootinfo(void)
+ 
+ int checkboard(void)
+ {
+-	if (valid_cfgblock)
+-		printf("Serial#: %s\n", tdx_serial_str);
+-
+-#ifdef CONFIG_TDX_CFG_BLOCK_EXTRA
+-	if (tdx_carrier_board_name)
+-		printf("Carrier: Toradex %s %s, Serial# %s\n",
+-		       tdx_carrier_board_name,
+-		       tdx_car_rev_str,
+-		       tdx_car_serial_str);
+-#endif
+-
+-	print_bootinfo();
+-
+-	return 0;
++	/*
++	 * On ARM64, BSS is cleared only after board_init_f returns.
++	 * valid_cfgblock and tdx_carrier_board_name are BSS globals and
++	 * must not be accessed here. Serial/carrier info is printed in
++	 * settings_r() which runs post-relocation with BSS cleared.
++	 */
++	return print_bootinfo();
+ }
+ 
+ static int settings_r(void)
 -- 
 2.54.0
 
