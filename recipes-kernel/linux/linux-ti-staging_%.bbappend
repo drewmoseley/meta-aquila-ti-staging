@@ -8,7 +8,6 @@ SRC_URI:append:aquila-am69 = " \
     file://k3-am69-aquila-v1.0-dev.dts \
     file://k3-am69-aquila-v1.0.dtsi \
     file://k3-am69-aquila.dtsi \
-    file://pstore.cfg \
 "
 
 do_configure:append:aquila-am69() {
@@ -30,4 +29,13 @@ do_configure:append:aquila-am69() {
     ; do
         grep -q "${dtb}" "${MK}" || echo "dtb-\$(CONFIG_ARCH_K3) += ${dtb}" >> "${MK}"
     done
+
+    # pstore/ramoops — built-in so crash capture works before modules load
+    ${S}/scripts/config --file ${B}/.config \
+        -e PSTORE \
+        -e PSTORE_RAM \
+        -e PSTORE_CONSOLE \
+        -e PSTORE_PMSG \
+        -d PSTORE_COMPRESS
+    yes "" | oe_runmake -C ${S} O=${B} oldconfig
 }
