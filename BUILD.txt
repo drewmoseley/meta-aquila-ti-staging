@@ -2,11 +2,11 @@ Build Instructions: Aquila AM69 with TI Staging Kernel
 =======================================================
 
 This layer (meta-aquila-ti-staging) extends the standard Toradex BSP for the
-Aquila AM69 module to use the upstream TI staging kernel (linux-ti-staging 6.6)
-in place of Toradex's downstream fork (linux-toradex-ti).
+Aquila AM69 module to use the upstream TI staging kernel (linux-ti-staging 6.12)
+and TI U-Boot 2025.01 in place of Toradex's downstream forks.
 
-All other BSP components (U-Boot, GPU drivers, firmware) remain as configured
-by the standard Toradex BSP.
+All other BSP components (GPU drivers, firmware) remain as configured by the
+standard Toradex BSP.
 
 
 Prerequisites
@@ -37,11 +37,24 @@ On Ubuntu/Debian:
     repo sync
 
 
-2. Clone this layer
--------------------
+2. Install the local manifest and sync
+---------------------------------------
 
-    # Replace <TBD_REPO_URL> with the actual git URL for meta-aquila-ti-staging
-    git clone <TBD_REPO_URL> layers/meta-aquila-ti-staging
+Download the local manifest from GitHub, run a second sync to check out this
+layer, then replace the downloaded file with a symlink into the layer so future
+edits stay in one place:
+
+    mkdir -p .repo/local_manifests
+
+    wget -O .repo/local_manifests/aquila-am69-ti-staging.xml \
+        https://raw.githubusercontent.com/drewmoseley/meta-aquila-ti-staging/main/local-manifests/aquila-am69-ti-staging.xml
+
+    repo sync
+
+    # Replace the downloaded copy with a symlink into the checked-out layer
+    rm .repo/local_manifests/aquila-am69-ti-staging.xml
+    ln -s ../../layers/meta-aquila-ti-staging/local-manifests/aquila-am69-ti-staging.xml \
+          .repo/local_manifests/aquila-am69-ti-staging.xml
 
 
 3. Set up the build environment
@@ -91,14 +104,11 @@ Other supported images:
 Notes
 -----
 
-- The TI staging kernel (linux-ti-staging 6.6) is provided by the
-  meta-ti/meta-ti-bsp layer, which is already included in the standard Toradex
-  BSP repo manifest.
+- The TI staging kernel (linux-ti-staging 6.12) and U-Boot 2025.01 are
+  provided by the meta-ti/meta-ti-bsp layer, which is already included in the
+  standard Toradex BSP repo manifest.  This layer selects them via
+  TI_PREFERRED_BSP = "ti-6_12".
 
-- The bootloader (u-boot-ti-staging) and TI BSP component versions are
-  determined by TI_PREFERRED_BSP = "ti-6_6" set in the aquila-am69 machine
-  configuration and are not changed by this layer.
-
-- To revert to the Toradex downstream kernel, simply remove this layer:
+- To revert to the Toradex downstream kernel and bootloader, remove this layer:
 
       bitbake-layers remove-layer ../layers/meta-aquila-ti-staging

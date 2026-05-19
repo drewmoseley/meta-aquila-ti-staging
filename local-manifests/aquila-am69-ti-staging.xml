@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+  <!--
+    Local manifest for Toradex Aquila AM69 TI staging support.
+
+    Drop this file in .repo/local_manifests/ of a standard Toradex BSP
+    workspace (scarthgap branch) then run `repo sync`.
+
+  -->
+  <remote name="github-aquila"
+          fetch="https://github.com/drewmoseley" />
+
+  <project remote="github-aquila"
+           name="meta-aquila-ti-staging"
+           path="layers/meta-aquila-ti-staging"
+           revision="main" />
+</manifest>
