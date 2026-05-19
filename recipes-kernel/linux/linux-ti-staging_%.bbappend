@@ -8,6 +8,7 @@ SRC_URI:append:aquila-am69 = " \
     file://k3-am69-aquila-v1.0-dev.dts \
     file://k3-am69-aquila-v1.0.dtsi \
     file://k3-am69-aquila.dtsi \
+    file://pstore.cfg \
 "
 
 do_configure:append:aquila-am69() {
