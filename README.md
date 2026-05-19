@@ -30,9 +30,9 @@ mkdir -p ~/yocto/scarthgap
 cd ~/yocto/scarthgap
 
 repo init \
-    -u https://github.com/toradex/toradex-bsp-platform.git \
-    -b scarthgap \
-    -m tdxref/default.xml
+     -u git://git.toradex.com/toradex-manifest.git \
+     -b refs/heads/scarthgap-7.x.y \
+     -m tdxref/default.xml
 
 repo sync
 ```
