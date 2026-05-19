@@ -30,7 +30,12 @@ do_configure:append:aquila-am69() {
         grep -q "${dtb}" "${MK}" || echo "dtb-\$(CONFIG_ARCH_K3) += ${dtb}" >> "${MK}"
     done
 
-    # pstore/ramoops — built-in so crash capture works before modules load
+}
+
+do_compile:prepend:aquila-am69() {
+    # pstore/ramoops — built-in so crash capture works before modules load.
+    # Must run here (after do_configure) because kernel-yocto runs a second
+    # oldconfig after do_configure:append that reverts any changes made there.
     ${S}/scripts/config --file ${B}/.config \
         -e PSTORE \
         -e PSTORE_RAM \
