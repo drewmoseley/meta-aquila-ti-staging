@@ -1060,10 +1060,9 @@
 
 	mcu_phy0: ethernet-phy@0 {
 		reg = <0>;
-		interrupt-parent = <&wkup_gpio0>;
-		interrupts = <79 IRQ_TYPE_EDGE_FALLING>;
 		ti,rx-internal-delay = <DP83867_RGMIIDCTL_2_00_NS>;
 		ti,fifo-depth = <DP83867_PHYCR_FIFO_DEPTH_4_B_NIB>;
+		ti,min-output-impedance;
 	};
 };
 
