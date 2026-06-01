@@ -107,3 +107,18 @@ Other supported images: `tdx-reference-multimedia-image`, `core-image-base`
   ```bash
   bitbake-layers remove-layer ../layers/meta-aquila-ti-staging
   ```
+
+- `recipes-kernel/linux/files/aquila-am69_intuitive-carrier_overlay.dts` is a
+  **disabled placeholder overlay** scaffolding SOW signals R.15.1 (TPM_RST_L),
+  R.15.3 (SOM_BOOT_WAIT_GPIO#), and R.15.4 (LOW_BATT#) for the Intuitive Surgical
+  custom carrier. All pins are fake (`0xFF`) pending confirmed pin/polarity values
+  from the Intuitive carrier schematic.
+
+  `device-tree-overlays-ti_%.bbappend` adds it to the overlay build, so it is
+  compiled and deployed to `/boot/overlays/` as a `.dtbo`. It is intentionally
+  **not** listed in `TEZI_EXTERNAL_KERNEL_DEVICETREE_BOOT`, so it is not written to
+  `overlays.txt` and U-Boot does not apply it at boot. To enable during carrier
+  bring-up, populate the pins and add the `.dtbo` filename to
+  `TEZI_EXTERNAL_KERNEL_DEVICETREE_BOOT` (or to `overlays.txt` on the boot
+  partition for a quick on-target test). R.15.2 (TPM interrupt) is already live on
+  the SoM TPM node and is not part of this scaffold.

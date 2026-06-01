@@ -1,0 +1,75 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Placeholder device-tree overlay for the Intuitive Surgical custom carrier
+ * (Toradex Aquila AM69 / TDA4 J784S4, Linux 6.12).
+ *
+ * SCAFFOLD ONLY — NOT VALIDATED. Built but not applied (see gating below).
+ *
+ * Scaffolds SOW signals R.15.1, R.15.3, R.15.4. Final GPIO controller, pin
+ * numbers, and polarities depend on the Intuitive carrier schematic, which
+ * does not exist yet. Every pin is an out-of-range fake (0xFF) and every node
+ * that can be is disabled, so even if this overlay is mistakenly applied it
+ * cannot mis-drive a line — an invalid pin fails loudly instead.
+ *
+ * Gating: this overlay IS built and deployed to /boot/overlays/ as a .dtbo by
+ * the device-tree-overlays-ti recipe (via device-tree-overlays-ti_%.bbappend),
+ * but is intentionally NOT listed in TEZI_EXTERNAL_KERNEL_DEVICETREE_BOOT, so it
+ * is not written to overlays.txt and U-Boot does not apply it at boot. It ships
+ * disabled. To enable during carrier bring-up: populate the pins below, then add
+ * this overlay's .dtbo filename to TEZI_EXTERNAL_KERNEL_DEVICETREE_BOOT (or to
+ * overlays.txt on the boot partition for a quick on-target test).
+ *
+ * R.15.2 (TPM interrupt) is NOT touched here — it is already authored and live
+ * on the SoM-level TPM node and currently passes.
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+
+/* R.15.1 — TPM_RST_L: active-low reset to the on-module TPM node.
+ * Merge a reset-gpios into the existing tpm@0 child of &mcu_spi0.
+ * Do NOT alter status or the interrupts mapping (that is R.15.2, live).
+ */
+&mcu_spi0 {
+	tpm@0 {
+		/* TODO: confirm GPIO controller + pin from Intuitive carrier schematic */
+		reset-gpios = <&main_gpio0 0xFF GPIO_ACTIVE_LOW>;
+	};
+};
+
+/* R.15.3 — SOM_BOOT_WAIT_GPIO#: GPIO holding a boot-wait state.
+ * Scaffolded as a gpio-hog. Inert: overlay is not applied, and the pin is fake.
+ */
+&main_gpio0 {
+	som_boot_wait_hog: som-boot-wait-hog {
+		/* TODO: confirm GPIO controller + pin + direction from Intuitive carrier schematic */
+		gpio-hog;
+		gpios = <0xFF GPIO_ACTIVE_LOW>;
+		input;
+		line-name = "SOM_BOOT_WAIT_GPIO#";
+	};
+};
+
+/* R.15.4 — LOW_BATT#: active-low coin-cell low-battery indicator, possibly
+ * interrupt-driven. Placeholder consumer node, disabled.
+ */
+&{/} {
+	low_batt: low-batt {
+		compatible = "gpio-keys"; /* TODO: confirm consumer binding for Intuitive carrier */
+		status = "disabled";
+
+		low-batt-event {
+			label = "LOW_BATT#";
+			/* TODO: confirm GPIO controller + pin from Intuitive carrier schematic */
+			gpios = <&main_gpio0 0xFF GPIO_ACTIVE_LOW>;
+			/* TODO: if interrupt-driven, confirm parent + line + type;
+			 * otherwise drop the interrupt mapping and use the gpios above.
+			 */
+			interrupt-parent = <&main_gpio0>;
+			interrupts = <0xFF IRQ_TYPE_EDGE_FALLING>;
+		};
+	};
+};
