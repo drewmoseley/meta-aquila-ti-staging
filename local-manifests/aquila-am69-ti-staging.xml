@@ -9,9 +9,17 @@
   -->
   <remote name="github-aquila"
           fetch="https://github.com/drewmoseley" />
+  <remote name="toradex"
+          fetch="https://github.com/toradex" />
 
   <project remote="github-aquila"
            name="meta-aquila-ti-staging"
            path="layers/meta-aquila-ti-staging"
            revision="main" />
+
+  <!-- dm-verity / secure-boot support; float on branch tip -->
+  <project remote="toradex"
+           name="meta-toradex-security"
+           path="layers/meta-toradex-security"
+           revision="scarthgap-7.x.y" />
 </manifest>
