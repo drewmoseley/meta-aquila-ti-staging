@@ -1,5 +1,13 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
+# Pull in Toradex security kernel config fragments (dm-verity, dm-crypt,
+# op-tee) from meta-toradex-security. meta-ti's linux-ti-staging is not one
+# of the kernel recipes that layer bbappends in its dynamic-layers/, so we
+# wire it in here using the same idiom (resolved via the security layer's
+# root in BBPATH). The .inc self-guards: dm-verity.cfg is only added when
+# the tdx-signed-dmverity override is active (INHERIT += "tdx-signed-dmverity").
+require recipes-kernel/linux/linux-sec-features.inc
+
 # DTS files for Aquila AM69 not yet in upstream TI kernel tree
 SRC_URI:append:aquila-am69 = " \
     file://k3-am69-aquila-clover.dts \
