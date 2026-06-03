@@ -42,6 +42,13 @@ do_configure:append:aquila-am69() {
 
 do_compile:prepend:aquila-am69() {
     # pstore/ramoops — built-in so crash capture works before modules load.
+    # dm-verity — built in (=y) so the rootfs can be mounted via a verity
+    # target. Enabled unconditionally here rather than through
+    # meta-toradex-security's override-gated dm-verity.cfg: that fragment is
+    # only added when the tdx-signed-dmverity override is in OVERRIDES, which
+    # is not reliably the case for linux-ti-staging. DM_VERITY selects its
+    # crypto deps; MD/BLK_DEV_DM/DM_BUFIO are the device-mapper prerequisites.
+    # Cost when unused is negligible (a dormant target, a few tens of KB).
     # Must run here (after do_configure) because kernel-yocto runs a second
     # oldconfig after do_configure:append that reverts any changes made there.
     ${S}/scripts/config --file ${B}/.config \
@@ -49,6 +56,10 @@ do_compile:prepend:aquila-am69() {
         -e PSTORE_RAM \
         -e PSTORE_CONSOLE \
         -e PSTORE_PMSG \
-        -d PSTORE_COMPRESS
+        -d PSTORE_COMPRESS \
+        -e MD \
+        -e BLK_DEV_DM \
+        -e DM_BUFIO \
+        -e DM_VERITY
     yes "" | oe_runmake -C ${S} O=${B} oldconfig
 }
