@@ -15,16 +15,14 @@ UBOOT_MACHINE:aquila-am69-k3r5 = "aquila-am69_r5_defconfig"
 
 SRC_URI:append:aquila-am69 = " \
     file://0001-arm-k3-board-dts-Add-Toradex-Aquila-AM69-SoM-support.patch \
-    file://0002-board-toradex-aquila-am69-call-k3_mem_map_init-in-dr.patch \
-    file://0003-arm-aquila-am69-add-Toradex-BSP-defconfig-options-an.patch \
-    file://0004-arm-aquila-am69-add-boot-filesystem-support-to-defco.patch \
-    file://0005-board-toradex-aquila-am69-add-Toradex-config-block-s.patch \
+    file://0002-arm-aquila-am69-add-defconfig-options-and-board-envi.patch \
+    file://0003-board-toradex-aquila-am69-add-Toradex-config-block-s.patch \
+    file://0004-board-toradex-aquila-am69-auto-select-carrier-DTB-fr.patch \
 "
 
 SRC_URI:append:aquila-am69-k3r5 = " \
     file://0001-arm-k3-board-dts-Add-Toradex-Aquila-AM69-SoM-support.patch \
-    file://0002-board-toradex-aquila-am69-call-k3_mem_map_init-in-dr.patch \
-    file://0003-arm-aquila-am69-add-Toradex-BSP-defconfig-options-an.patch \
-    file://0004-arm-aquila-am69-add-boot-filesystem-support-to-defco.patch \
-    file://0005-board-toradex-aquila-am69-add-Toradex-config-block-s.patch \
+    file://0002-arm-aquila-am69-add-defconfig-options-and-board-envi.patch \
+    file://0003-board-toradex-aquila-am69-add-Toradex-config-block-s.patch \
+    file://0004-board-toradex-aquila-am69-auto-select-carrier-DTB-fr.patch \
 "

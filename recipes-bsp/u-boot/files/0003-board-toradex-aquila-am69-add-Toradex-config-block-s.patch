@@ -1,7 +1,8 @@
-From 26a4226f6c143908878457aaa4ff843febc3658c Mon Sep 17 00:00:00 2001
+From 94b6d35675a403ff29ffd945e4ad175c782694fc Mon Sep 17 00:00:00 2001
 From: Drew Moseley <drew@moseleynet.net>
 Date: Mon, 18 May 2026 16:53:01 -0400
-Subject: [PATCH] board: toradex: aquila-am69: add Toradex config block support
+Subject: [PATCH 3/4] board: toradex: aquila-am69: add Toradex config block
+ support
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

@@ -1,0 +1,118 @@
+From d8272b51f24f3a9f0bbeff69225c046d68894879 Mon Sep 17 00:00:00 2001
+From: Drew Moseley <drew@moseleynet.net>
+Date: Thu, 18 Jun 2026 17:53:44 -0400
+Subject: [PATCH 4/4] board: toradex: aquila-am69: auto-select carrier DTB from
+ config block
+
+Add the Aquila Development Board (Toradex PID4 0177) and Clover (0179)
+carriers to the carrier board table and map both to fdt_board in
+board_late_init(), so the correct kernel device tree is selected without a
+manual setenv.
+
+Each carrier EEPROM (eeprom1, @0x57) holds a valid Toradex carrier config
+block, confirmed by dumping both on hardware:
+  - Clover V1.0B:                TAG_HW prodid = 0x00b3 (179)
+  - Aquila Development Board V1.2C: TAG_HW prodid = 0x00b1 (177)
+Toradex's own carrier table had no entry for either (stock U-Boot reported
+"UNKNOWN CARRIER BOARD"); add them as "Clover" and "Aquila Development
+Board".
+
+select_carrier_dt() reads the carrier block and positively maps each known
+PID4 to fdt_board (177 -> dev, 179 -> clover). A missing or unknown block
+leaves fdt_board at its compiled default or the saved value, so manual
+`setenv fdt_board <carrier>; saveenv` still works for carriers without a
+Toradex config block (e.g. a custom carrier). Positive mapping makes a
+module portable between dev and Clover regardless of any saved fdt_board.
+
+Requires CONFIG_I2C_EEPROM (enabled in the defconfig commit) so the carrier
+EEPROM node is bound and read_tdx_cfg_block_carrier() succeeds.
+
+Upstream-Status: Inappropriate [Toradex BSP staging]
+---
+ board/toradex/aquila-am69/aquila-am69.c | 32 +++++++++++++++++++++++++
+ board/toradex/common/tdx-cfg-block.c    |  2 ++
+ board/toradex/common/tdx-cfg-block.h    |  2 ++
+ 3 files changed, 36 insertions(+)
+
+diff --git a/board/toradex/aquila-am69/aquila-am69.c b/board/toradex/aquila-am69/aquila-am69.c
+index a52596385ce..c22ad76226c 100644
+--- a/board/toradex/aquila-am69/aquila-am69.c
++++ b/board/toradex/aquila-am69/aquila-am69.c
+@@ -17,6 +17,7 @@
+ #include <mach/k3-ddr.h>
+ 
+ #include "../common/tdx-common.h"
++#include "../common/tdx-cfg-block.h"
+ #include "aquila_ddrs.h"
+ #include "ddrs_patch.h"
+ 
+@@ -306,9 +307,40 @@ static void detect_board_variant(void)
+ 		env_set("variant", "-v1.0");
+ }
+ 
++/*
++ * Select the carrier device tree from the carrier config block.
++ *
++ * PREBOOT builds fdtfile as k3-am69-aquila${variant}-${fdt_board}.dtb, so
++ * ${fdt_board} chooses the carrier DTB. Map the carrier product ID read from
++ * the carrier EEPROM (eeprom1) to fdt_board. Only override for a recognised
++ * carrier with a valid config block; on a missing/unknown block we leave
++ * fdt_board at its compiled default ("dev") or whatever the user has saved,
++ * so manual `setenv fdt_board ...; saveenv` still works on other carriers.
++ */
++static void select_carrier_dt(void)
++{
++	if (!IS_ENABLED(CONFIG_TDX_CFG_BLOCK_EXTRA))
++		return;
++
++	if (read_tdx_cfg_block_carrier())
++		return;
++
++	switch (tdx_car_hw_tag.prodid) {
++	case CLOVER:
++		env_set("fdt_board", "clover");
++		break;
++	case AQUILA_DEVELOPMENT_BOARD:
++		env_set("fdt_board", "dev");
++		break;
++	default:
++		break;
++	}
++}
++
+ int board_late_init(void)
+ {
+ 	detect_board_variant();
++	select_carrier_dt();
+ 
+ 	return 0;
+ }
+diff --git a/board/toradex/common/tdx-cfg-block.c b/board/toradex/common/tdx-cfg-block.c
+index f5386911ab7..4840c19a8ae 100644
+--- a/board/toradex/common/tdx-cfg-block.c
++++ b/board/toradex/common/tdx-cfg-block.c
+@@ -180,6 +180,8 @@ const struct pid4list toradex_carrier_boards[] = {
+ 	{DAHLIA,			"Dahlia"},
+ 	{VERDIN_DEVELOPMENT_BOARD,	"Verdin Development Board"},
+ 	{YAVIA,				"Yavia"},
++	{AQUILA_DEVELOPMENT_BOARD,	"Aquila Development Board"},
++	{CLOVER,			"Clover"},
+ };
+ 
+ const struct pid4list toradex_display_adapters[] = {
+diff --git a/board/toradex/common/tdx-cfg-block.h b/board/toradex/common/tdx-cfg-block.h
+index 0d6dd1c3a72..9bb61cdfa21 100644
+--- a/board/toradex/common/tdx-cfg-block.h
++++ b/board/toradex/common/tdx-cfg-block.h
+@@ -122,6 +122,8 @@ enum {
+ 	DAHLIA = 155,
+ 	VERDIN_DEVELOPMENT_BOARD = 156,
+ 	YAVIA = 173,
++	AQUILA_DEVELOPMENT_BOARD = 177,
++	CLOVER = 179,
+ };
+ 
+ enum {
+-- 
+2.54.0
+

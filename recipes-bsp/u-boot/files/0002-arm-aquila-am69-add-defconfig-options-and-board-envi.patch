@@ -1,25 +1,47 @@
-From f4b1ea127ce2bae499f3ae98ce4bb2272581e0b8 Mon Sep 17 00:00:00 2001
+From 70ccdd334a57c1345ae72e8c489180e6b406ade9 Mon Sep 17 00:00:00 2001
 From: Drew Moseley <drew@moseleynet.net>
 Date: Mon, 18 May 2026 16:00:42 -0400
-Subject: [PATCH 3/5] arm: aquila-am69: add Toradex BSP defconfig options and
- board env
+Subject: [PATCH 2/4] arm: aquila-am69: add defconfig options and board
+ environment
 
-Add Toradex-BSP-specific defconfig options:
+Add the Toradex-BSP defconfig options and compiled-in environment for
+the Aquila AM69 A72 build.
+
+Boot / BSP options:
 - DISTRO_DEFAULTS + BOOTCOMMAND="bootflow scan -b"
-- PREBOOT to construct fdtfile from variant/fdt_board env vars
+- PREBOOT constructs fdtfile from ${variant}/${fdt_board}
 - ENV_VARS_UBOOT_RUNTIME_CONFIG for board detection
 - BOOTCOUNT_LIMIT/ENV for watchdog-assisted boot fallback
 - USB gadget / fastboot / UUU support
+- board/toradex/aquila-am69/aquila-am69.env: boot_targets, console,
+  memory addresses, DFU alt info, eMMC raw-write helpers for
+  tiboot3/tispl/u-boot
 
-Add board/toradex/aquila-am69/aquila-am69.env with compiled-in
-environment defaults (boot_targets, console, memory addresses,
-DFU alt info, eMMC raw-write helpers for tiboot3/tispl/u-boot).
+Boot filesystem support (j784s4_evm_a72_defconfig enables these only in
+SPL, so main U-Boot found no bootflows and 'mmc' was unknown):
+- CMD_MMC, CMD_FAT/FS_FAT/FS_FAT_MAX_CLUSTSIZE, CMD_EXT4/EXT4_WRITE,
+  CMD_FS_GENERIC
+- LEGACY_IMAGE_FORMAT so the script bootmeth can parse the
+  mkimage-wrapped boot.scr
+
+Persistent env, EEPROM, board_late_init (missing vs the Toradex
+production BSP, causing three defects):
+- ENV_IS_IN_MMC on boot partition 1 (ENV_SIZE/ENV_OFFSET already agree);
+  without an env backend the environment was read-only ("Loading
+  Environment from nowhere"), BOOTCOUNT_ENV was a no-op, and a saved
+  fdt_board could not persist
+- I2C_EEPROM so the SoM/carrier EEPROM nodes (eeprom@50/@57) bind;
+  otherwise get_tdx_eeprom() fails with "cannot find EEPROM by node"
+- BOARD_LATE_INIT so board_late_init() -> detect_board_variant() runs
+  and ${variant} is set
+- CMD_ASKENV (update_* env macros) and SPL_ENV_SUPPORT for parity
 
 Signed-off-by: Drew Moseley <drew.moseley@toradex.com>
+Upstream-Status: Inappropriate [Toradex BSP staging]
 ---
  board/toradex/aquila-am69/aquila-am69.env | 47 +++++++++++++++++++++++
- configs/aquila-am69_a72_defconfig         | 19 +++++++++
- 2 files changed, 66 insertions(+)
+ configs/aquila-am69_a72_defconfig         | 43 +++++++++++++++++++++
+ 2 files changed, 90 insertions(+)
  create mode 100644 board/toradex/aquila-am69/aquila-am69.env
 
 diff --git a/board/toradex/aquila-am69/aquila-am69.env b/board/toradex/aquila-am69/aquila-am69.env
@@ -76,13 +98,14 @@ index 00000000000..34f2e63f706
 +		mmc dev 0 1; mmc write ${loadaddr} 0x1400 ${blkcnt};
 +	fi
 diff --git a/configs/aquila-am69_a72_defconfig b/configs/aquila-am69_a72_defconfig
-index f66495fd1d5..3c90449a723 100644
+index f66495fd1d5..a1be2e9e01f 100644
 --- a/configs/aquila-am69_a72_defconfig
 +++ b/configs/aquila-am69_a72_defconfig
-@@ -22,3 +22,22 @@ CONFIG_ENV_SIZE=0x2000
+@@ -22,3 +22,46 @@ CONFIG_ENV_SIZE=0x2000
  CONFIG_ENV_OFFSET=0xFFFFDE00
  CONFIG_SYS_PROMPT="Aquila AM69 # "
  CONFIG_BOOTDELAY=1
++CONFIG_LEGACY_IMAGE_FORMAT=y
 +CONFIG_DISTRO_DEFAULTS=y
 +CONFIG_BOOTCOMMAND="bootflow scan -b"
 +CONFIG_USE_PREBOOT=y
@@ -91,6 +114,22 @@ index f66495fd1d5..3c90449a723 100644
 +CONFIG_CMD_BOOTCOUNT=y
 +CONFIG_BOOTCOUNT_LIMIT=y
 +CONFIG_BOOTCOUNT_ENV=y
++# Persistent environment in eMMC boot partition 1 (matches Toradex BSP layout).
++# Without a backend the env is read-only ("Environment from nowhere") and
++# CONFIG_BOOTCOUNT_ENV above is a no-op.
++CONFIG_ENV_IS_IN_MMC=y
++CONFIG_SYS_MMC_ENV_PART=1
++CONFIG_ENV_OVERWRITE=y
++CONFIG_SYS_RELOC_GD_ENV_ADDR=y
++CONFIG_SPL_ENV_SUPPORT=y
++# update_tiboot3/update_tispl/update_uboot env macros use askenv.
++CONFIG_CMD_ASKENV=y
++# CONFIG_CMD_EXPORTENV is not set
++# Run board_late_init() -> detect_board_variant() so ${variant} is set.
++CONFIG_BOARD_LATE_INIT=y
++# Bind the SoM/carrier I2C EEPROMs (eeprom@50/@57) so get_tdx_eeprom() and
++# the Toradex config-block reads work instead of "cannot find EEPROM by node".
++CONFIG_I2C_EEPROM=y
 +CONFIG_USB_GADGET_MANUFACTURER="Toradex"
 +CONFIG_USB_GADGET_VENDOR_NUM=0x1b67
 +CONFIG_USB_GADGET_PRODUCT_NUM=0x4000
@@ -102,6 +141,13 @@ index f66495fd1d5..3c90449a723 100644
 +CONFIG_FASTBOOT_UUU_SUPPORT=y
 +CONFIG_FASTBOOT_FLASH_MMC_DEV=0
 +CONFIG_FASTBOOT_CMD_OEM_FORMAT=y
++CONFIG_CMD_MMC=y
++CONFIG_CMD_FAT=y
++CONFIG_FS_FAT=y
++CONFIG_FS_FAT_MAX_CLUSTSIZE=16384
++CONFIG_CMD_EXT4=y
++CONFIG_CMD_EXT4_WRITE=y
++CONFIG_CMD_FS_GENERIC=y
 -- 
 2.54.0
 
